@@ -1,0 +1,889 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta name="theme-color" content="#0a0a0a"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="MindBody Coach"/>
+<meta name="description" content="Your personal mind-body coaching hub"/>
+<title>MindBody Coach</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --bg: #0a0a0a;
+    --surface: #131313;
+    --surface2: #1a1a1a;
+    --border: rgba(255,255,255,0.08);
+    --accent: #e8ff47;
+    --accent2: #ff4757;
+    --accent3: #00d4aa;
+    --text: #f0f0f0;
+    --muted: #666;
+    --font-display: 'Bebas Neue', sans-serif;
+    --font-body: 'DM Sans', sans-serif;
+    --font-mono: 'DM Mono', monospace;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 15px;
+    line-height: 1.6;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ---- NOISE TEXTURE OVERLAY ---- */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 9999;
+    opacity: 0.4;
+  }
+
+  /* ---- NAV ---- */
+  nav {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    background: rgba(13,13,13,0.95);
+    backdrop-filter: blur(20px);
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: space-around;
+    padding: 10px 0 max(10px, env(safe-area-inset-bottom));
+    z-index: 100;
+  }
+  .nav-btn {
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+    background: none; border: none; color: var(--muted);
+    font-family: var(--font-body); font-size: 10px; font-weight: 500;
+    letter-spacing: 0.05em; text-transform: uppercase;
+    cursor: pointer; padding: 4px 16px;
+    transition: color 0.2s;
+  }
+  .nav-btn.active { color: var(--accent); }
+  .nav-btn svg { width: 22px; height: 22px; }
+
+  /* ---- PAGES ---- */
+  .page { display: none; padding: 0 0 100px; min-height: 100vh; }
+  .page.active { display: block; }
+
+  /* ---- HERO HEADER ---- */
+  .hero {
+    position: relative;
+    padding: 60px 20px 40px;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: -60px; right: -60px;
+    width: 280px; height: 280px;
+    background: radial-gradient(circle, rgba(232,255,71,0.12) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .hero-eyebrow {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .hero-title {
+    font-family: var(--font-display);
+    font-size: clamp(52px, 13vw, 80px);
+    line-height: 0.92;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+  }
+  .hero-title span { color: var(--accent); }
+  .hero-sub {
+    margin-top: 14px;
+    color: var(--muted);
+    font-size: 13px;
+    max-width: 280px;
+  }
+
+  /* ---- SECTION LABEL ---- */
+  .section-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    padding: 0 20px;
+    margin-bottom: 14px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .section-label::after {
+    content: '';
+    flex: 1; height: 1px;
+    background: var(--border);
+  }
+
+  /* ---- CARDS ---- */
+  .cards { padding: 0 12px; display: flex; flex-direction: column; gap: 10px; }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 18px 18px 16px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.2s, transform 0.15s;
+    cursor: pointer;
+  }
+  .card:active { transform: scale(0.98); }
+  .card:hover { border-color: rgba(255,255,255,0.15); }
+  .card-tag {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 4px;
+    display: inline-block;
+    margin-bottom: 10px;
+    font-weight: 500;
+  }
+  .tag-green { background: rgba(0,212,170,0.15); color: var(--accent3); }
+  .tag-yellow { background: rgba(232,255,71,0.15); color: var(--accent); }
+  .tag-red { background: rgba(255,71,87,0.12); color: var(--accent2); }
+  .tag-purple { background: rgba(180,100,255,0.15); color: #c07aff; }
+  .card-title {
+    font-family: var(--font-display);
+    font-size: 22px;
+    letter-spacing: 0.04em;
+    line-height: 1.1;
+    margin-bottom: 6px;
+  }
+  .card-desc { font-size: 13px; color: var(--muted); line-height: 1.5; }
+  .card-meta {
+    margin-top: 12px;
+    display: flex; gap: 14px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--muted);
+  }
+  .card-meta span { display: flex; align-items: center; gap: 4px; }
+  .card-accent-line {
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 3px;
+    border-radius: 14px 0 0 14px;
+  }
+
+  /* ---- WORKOUT DETAIL ---- */
+  .detail-panel {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: var(--bg);
+    z-index: 200;
+    overflow-y: auto;
+    padding-bottom: 40px;
+  }
+  .detail-panel.open { display: block; }
+  .detail-back {
+    display: flex; align-items: center; gap: 8px;
+    background: none; border: none;
+    color: var(--accent); font-family: var(--font-body);
+    font-size: 14px; cursor: pointer;
+    padding: 20px 20px 0;
+  }
+  .detail-back svg { width: 18px; height: 18px; }
+  .detail-hero {
+    padding: 24px 20px 32px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 24px;
+  }
+  .detail-hero .hero-eyebrow { margin-bottom: 6px; }
+  .detail-hero h1 {
+    font-family: var(--font-display);
+    font-size: clamp(40px, 10vw, 64px);
+    line-height: 0.95;
+    text-transform: uppercase;
+  }
+  .detail-hero p { margin-top: 10px; color: var(--muted); font-size: 14px; }
+  .exercises { padding: 0 20px; display: flex; flex-direction: column; gap: 8px; }
+  .exercise {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .exercise-name { font-weight: 500; font-size: 14px; }
+  .exercise-sets {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--accent);
+    background: rgba(232,255,71,0.1);
+    padding: 4px 10px;
+    border-radius: 6px;
+  }
+
+  /* ---- STATS BAR ---- */
+  .stats-bar {
+    display: flex;
+    gap: 0;
+    margin: 0 12px 24px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    overflow: hidden;
+  }
+  .stat {
+    flex: 1;
+    padding: 16px 12px;
+    text-align: center;
+    border-right: 1px solid var(--border);
+  }
+  .stat:last-child { border-right: none; }
+  .stat-num {
+    font-family: var(--font-display);
+    font-size: 28px;
+    color: var(--accent);
+    line-height: 1;
+  }
+  .stat-label { font-size: 10px; color: var(--muted); margin-top: 2px; text-transform: uppercase; letter-spacing: 0.08em; }
+
+  /* ---- TIP CARDS ---- */
+  .tip-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 20px;
+    position: relative;
+    overflow: hidden;
+  }
+  .tip-num {
+    font-family: var(--font-display);
+    font-size: 80px;
+    color: rgba(255,255,255,0.04);
+    position: absolute;
+    top: -10px; right: 10px;
+    line-height: 1;
+    pointer-events: none;
+  }
+  .tip-card h3 {
+    font-family: var(--font-display);
+    font-size: 20px;
+    letter-spacing: 0.03em;
+    margin-bottom: 6px;
+  }
+  .tip-card p { font-size: 13px; color: var(--muted); line-height: 1.6; }
+
+  /* ---- MINDSET PAGE ---- */
+  .quote-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 28px 22px;
+    position: relative;
+    overflow: hidden;
+  }
+  .quote-mark {
+    font-family: var(--font-display);
+    font-size: 120px;
+    color: var(--accent);
+    opacity: 0.12;
+    position: absolute;
+    top: -20px; left: 10px;
+    line-height: 1;
+    pointer-events: none;
+  }
+  .quote-text {
+    font-family: var(--font-display);
+    font-size: 22px;
+    line-height: 1.2;
+    letter-spacing: 0.02em;
+    margin-bottom: 12px;
+    position: relative;
+  }
+  .quote-author { font-size: 12px; color: var(--muted); font-family: var(--font-mono); }
+
+  /* ---- ABOUT PAGE ---- */
+  .about-hero {
+    padding: 60px 20px 32px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .about-hero::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 50%; transform: translateX(-50%);
+    width: 300px; height: 300px;
+    background: radial-gradient(circle, rgba(232,255,71,0.08) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .avatar {
+    width: 80px; height: 80px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent) 0%, var(--accent3) 100%);
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-display);
+    font-size: 32px;
+    color: #000;
+    margin: 0 auto 16px;
+  }
+  .about-name {
+    font-family: var(--font-display);
+    font-size: 36px;
+    letter-spacing: 0.04em;
+  }
+  .about-role { color: var(--accent); font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.15em; margin-top: 4px; }
+  .about-bio { color: var(--muted); font-size: 14px; margin-top: 14px; line-height: 1.7; }
+  .contact-btn {
+    display: block;
+    margin: 20px 20px 0;
+    background: var(--accent);
+    color: #000;
+    border: none;
+    border-radius: 10px;
+    padding: 14px 20px;
+    font-family: var(--font-display);
+    font-size: 18px;
+    letter-spacing: 0.06em;
+    cursor: pointer;
+    text-align: center;
+    text-decoration: none;
+    transition: opacity 0.2s, transform 0.15s;
+  }
+  .contact-btn:active { transform: scale(0.97); opacity: 0.9; }
+
+  /* ---- NUTRITION ---- */
+  .macro-bar {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 18px;
+    margin: 0 12px 10px;
+  }
+  .macro-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .macro-name { font-weight: 500; font-size: 14px; }
+  .macro-val { font-family: var(--font-mono); font-size: 13px; color: var(--accent); }
+  .macro-track { height: 6px; background: var(--surface2); border-radius: 3px; overflow: hidden; }
+  .macro-fill { height: 100%; border-radius: 3px; transition: width 1s ease; }
+
+  /* ---- INSTALL BANNER ---- */
+  #install-banner {
+    display: none;
+    position: fixed;
+    bottom: 80px; left: 12px; right: 12px;
+    background: var(--accent);
+    color: #000;
+    border-radius: 12px;
+    padding: 12px 16px;
+    display: flex; align-items: center; gap: 12px;
+    z-index: 150;
+    animation: slideUp 0.4s ease;
+  }
+  #install-banner.hidden { display: none !important; }
+  @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+  .install-text { flex: 1; font-size: 13px; font-weight: 500; line-height: 1.3; }
+  .install-btn {
+    background: #000; color: var(--accent);
+    border: none; border-radius: 7px;
+    padding: 7px 14px;
+    font-family: var(--font-display);
+    font-size: 15px;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .install-close {
+    background: none; border: none;
+    font-size: 18px; cursor: pointer; color: #000; opacity: 0.6;
+    padding: 0 0 0 4px;
+  }
+
+  /* ---- PAGE ANIMATIONS ---- */
+  .page.active .card,
+  .page.active .tip-card,
+  .page.active .quote-card,
+  .page.active .macro-bar {
+    animation: fadeUp 0.35s ease both;
+  }
+  .page.active .card:nth-child(2) { animation-delay: 0.05s; }
+  .page.active .card:nth-child(3) { animation-delay: 0.10s; }
+  .page.active .card:nth-child(4) { animation-delay: 0.15s; }
+  .page.active .card:nth-child(5) { animation-delay: 0.20s; }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+</style>
+</head>
+<body>
+
+<!-- ===== HOME PAGE ===== -->
+<div class="page active" id="page-home">
+  <div class="hero">
+    <div class="hero-eyebrow">// Your daily hub</div>
+    <h1 class="hero-title">Mind<span>Body</span><br>Coach</h1>
+    <p class="hero-sub">Train hard. Think sharp. Live fully.</p>
+  </div>
+
+  <div class="stats-bar">
+    <div class="stat">
+      <div class="stat-num">12</div>
+      <div class="stat-label">Workouts</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num">8</div>
+      <div class="stat-label">Mindset tips</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num">6</div>
+      <div class="stat-label">Nutrition tips</div>
+    </div>
+  </div>
+
+  <div class="section-label">Featured workouts</div>
+  <div class="cards">
+    <div class="card" onclick="openWorkout('hiit')">
+      <div class="card-accent-line" style="background:var(--accent2)"></div>
+      <span class="card-tag tag-red">HIIT</span>
+      <div class="card-title">Full Body Blast</div>
+      <div class="card-desc">High intensity intervals targeting every muscle group. No equipment needed.</div>
+      <div class="card-meta">
+        <span>⏱ 30 min</span>
+        <span>🔥 Advanced</span>
+        <span>🏠 Home</span>
+      </div>
+    </div>
+    <div class="card" onclick="openWorkout('mobility')">
+      <div class="card-accent-line" style="background:var(--accent3)"></div>
+      <span class="card-tag tag-green">Mobility</span>
+      <div class="card-title">Morning Flow</div>
+      <div class="card-desc">Wake up your body with this energising mobility routine. Perfect to start any day.</div>
+      <div class="card-meta">
+        <span>⏱ 15 min</span>
+        <span>💚 All levels</span>
+        <span>🏠 Home</span>
+      </div>
+    </div>
+    <div class="card" onclick="openWorkout('strength')">
+      <div class="card-accent-line" style="background:var(--accent)"></div>
+      <span class="card-tag tag-yellow">Strength</span>
+      <div class="card-title">Core Power</div>
+      <div class="card-desc">Build a bulletproof core with progressive bodyweight movements.</div>
+      <div class="card-meta">
+        <span>⏱ 25 min</span>
+        <span>⚡ Intermediate</span>
+        <span>🏠 Home</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== WORKOUTS PAGE ===== -->
+<div class="page" id="page-workouts">
+  <div class="hero">
+    <div class="hero-eyebrow">// Train</div>
+    <h1 class="hero-title">Work<span>outs</span></h1>
+  </div>
+  <div class="section-label">All programs</div>
+  <div class="cards">
+    <div class="card" onclick="openWorkout('hiit')">
+      <div class="card-accent-line" style="background:var(--accent2)"></div>
+      <span class="card-tag tag-red">HIIT</span>
+      <div class="card-title">Full Body Blast</div>
+      <div class="card-desc">High intensity intervals targeting every muscle group.</div>
+      <div class="card-meta"><span>⏱ 30 min</span><span>🔥 Advanced</span></div>
+    </div>
+    <div class="card" onclick="openWorkout('mobility')">
+      <div class="card-accent-line" style="background:var(--accent3)"></div>
+      <span class="card-tag tag-green">Mobility</span>
+      <div class="card-title">Morning Flow</div>
+      <div class="card-desc">Wake up your body with this energising mobility routine.</div>
+      <div class="card-meta"><span>⏱ 15 min</span><span>💚 All levels</span></div>
+    </div>
+    <div class="card" onclick="openWorkout('strength')">
+      <div class="card-accent-line" style="background:var(--accent)"></div>
+      <span class="card-tag tag-yellow">Strength</span>
+      <div class="card-title">Core Power</div>
+      <div class="card-desc">Build a bulletproof core with progressive bodyweight movements.</div>
+      <div class="card-meta"><span>⏱ 25 min</span><span>⚡ Intermediate</span></div>
+    </div>
+    <div class="card" onclick="openWorkout('yoga')">
+      <div class="card-accent-line" style="background:#c07aff"></div>
+      <span class="card-tag tag-purple">Mind + Body</span>
+      <div class="card-title">Power Yoga</div>
+      <div class="card-desc">Dynamic yoga flow combining strength, balance and breath.</div>
+      <div class="card-meta"><span>⏱ 40 min</span><span>🧘 Intermediate</span></div>
+    </div>
+    <div class="card" onclick="openWorkout('stretch')">
+      <div class="card-accent-line" style="background:var(--accent3)"></div>
+      <span class="card-tag tag-green">Recovery</span>
+      <div class="card-title">Deep Stretch</div>
+      <div class="card-desc">Full body stretch and recovery session. Ideal after a hard workout.</div>
+      <div class="card-meta"><span>⏱ 20 min</span><span>💚 All levels</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== NUTRITION PAGE ===== -->
+<div class="page" id="page-nutrition">
+  <div class="hero">
+    <div class="hero-eyebrow">// Fuel</div>
+    <h1 class="hero-title">Nutri<span>tion</span></h1>
+  </div>
+
+  <div class="section-label">Daily macro guide</div>
+  <div class="macro-bar">
+    <div class="macro-header"><span class="macro-name">Protein</span><span class="macro-val">~160g / day</span></div>
+    <div class="macro-track"><div class="macro-fill" style="width:85%;background:var(--accent2)"></div></div>
+  </div>
+  <div class="macro-bar">
+    <div class="macro-header"><span class="macro-name">Carbohydrates</span><span class="macro-val">~220g / day</span></div>
+    <div class="macro-track"><div class="macro-fill" style="width:65%;background:var(--accent)"></div></div>
+  </div>
+  <div class="macro-bar">
+    <div class="macro-header"><span class="macro-name">Healthy Fats</span><span class="macro-val">~70g / day</span></div>
+    <div class="macro-track"><div class="macro-fill" style="width:45%;background:var(--accent3)"></div></div>
+  </div>
+
+  <div class="section-label" style="margin-top:24px">Nutrition tips</div>
+  <div class="cards">
+    <div class="tip-card">
+      <div class="tip-num">01</div>
+      <span class="card-tag tag-yellow">Hydration</span>
+      <h3>Drink Before You're Thirsty</h3>
+      <p>Aim for 30–35ml per kg of bodyweight daily. Add an extra 500ml for every hour of exercise. Start your morning with a big glass of water before coffee.</p>
+    </div>
+    <div class="tip-card">
+      <div class="tip-num">02</div>
+      <span class="card-tag tag-red">Protein</span>
+      <h3>Protein at Every Meal</h3>
+      <p>Include a quality protein source at each meal — eggs, chicken, fish, legumes, or Greek yogurt. This supports muscle recovery and keeps you fuller longer.</p>
+    </div>
+    <div class="tip-card">
+      <div class="tip-num">03</div>
+      <span class="card-tag tag-green">Timing</span>
+      <h3>Pre-Workout Fuel</h3>
+      <p>Eat a balanced meal 90–120 minutes before training. Aim for carbs + protein + small fat. A banana with peanut butter works perfectly in a pinch.</p>
+    </div>
+    <div class="tip-card">
+      <div class="tip-num">04</div>
+      <span class="card-tag tag-purple">Recovery</span>
+      <h3>Post-Workout Window</h3>
+      <p>Within 30–60 minutes after training, have protein + fast carbs. This kickstarts muscle repair. A protein shake with fruit is simple and effective.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ===== TIPS PAGE ===== -->
+<div class="page" id="page-tips">
+  <div class="hero">
+    <div class="hero-eyebrow">// Mindset</div>
+    <h1 class="hero-title">Mind<span>set</span></h1>
+  </div>
+
+  <div class="section-label">Daily quote</div>
+  <div style="padding:0 12px;margin-bottom:24px">
+    <div class="quote-card" id="quote-card">
+      <div class="quote-mark">"</div>
+      <div class="quote-text" id="quote-text">The body achieves what the mind believes.</div>
+      <div class="quote-author" id="quote-author">— Mind Body Coach</div>
+    </div>
+  </div>
+
+  <div class="section-label">Mindset tips</div>
+  <div class="cards">
+    <div class="tip-card">
+      <div class="tip-num">01</div>
+      <span class="card-tag tag-yellow">Focus</span>
+      <h3>The 5-Minute Rule</h3>
+      <p>On days you don't want to train — commit to just 5 minutes. Most of the time you'll keep going. Starting is the hardest part.</p>
+    </div>
+    <div class="tip-card">
+      <div class="tip-num">02</div>
+      <span class="card-tag tag-red">Stress</span>
+      <h3>Box Breathing</h3>
+      <p>Inhale 4 counts → Hold 4 → Exhale 4 → Hold 4. Repeat 4 times. Use before a workout, stressful meeting, or whenever you feel overwhelmed.</p>
+    </div>
+    <div class="tip-card">
+      <div class="tip-num">03</div>
+      <span class="card-tag tag-green">Habits</span>
+      <h3>Stack Your Habits</h3>
+      <p>Attach new habits to existing ones. After I make coffee → I do 5 minutes of stretching. The anchor makes the habit stick much faster.</p>
+    </div>
+    <div class="tip-card">
+      <div class="tip-num">04</div>
+      <span class="card-tag tag-purple">Sleep</span>
+      <h3>Sleep is Training</h3>
+      <p>70% of muscle repair happens during sleep. 7–9 hours isn't a luxury — it's part of your training plan. Protect it like a workout session.</p>
+    </div>
+    <div class="tip-card">
+      <div class="tip-num">05</div>
+      <span class="card-tag tag-yellow">Identity</span>
+      <h3>Become the Person</h3>
+      <p>Don't say "I'm trying to get fit." Say "I'm someone who moves every day." Identity-based habits are the most powerful form of lasting change.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ===== ABOUT PAGE ===== -->
+<div class="page" id="page-about">
+  <div class="about-hero">
+    <div class="avatar">MC</div>
+    <div class="about-name">MindBody Coach</div>
+    <div class="about-role">// Personal Trainer · Mind-Body Coach</div>
+    <p class="about-bio">
+      I help people build strong bodies and resilient minds through movement, nutrition, and mindset work.
+      Whether you're just starting or levelling up — I meet you where you are.
+    </p>
+  </div>
+
+  <div class="section-label">What I offer</div>
+  <div class="cards">
+    <div class="card">
+      <div class="card-accent-line" style="background:var(--accent)"></div>
+      <span class="card-tag tag-yellow">1-on-1</span>
+      <div class="card-title">Personal Training</div>
+      <div class="card-desc">Tailored workout plans and weekly check-ins designed around your goals and lifestyle.</div>
+    </div>
+    <div class="card">
+      <div class="card-accent-line" style="background:var(--accent3)"></div>
+      <span class="card-tag tag-green">Online</span>
+      <div class="card-title">Remote Coaching</div>
+      <div class="card-desc">Full programme, nutrition guidance, and mindset support — wherever you are in the world.</div>
+    </div>
+    <div class="card">
+      <div class="card-accent-line" style="background:#c07aff"></div>
+      <span class="card-tag tag-purple">Group</span>
+      <div class="card-title">Small Group Sessions</div>
+      <div class="card-desc">Train with a small group of like-minded people. Motivating, affordable, and effective.</div>
+    </div>
+  </div>
+
+  <a href="mailto:hello@mindbodycoach.com" class="contact-btn">Get in touch →</a>
+</div>
+
+<!-- ===== WORKOUT DETAIL PANEL ===== -->
+<div class="detail-panel" id="detail-panel">
+  <button class="detail-back" onclick="closeWorkout()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15,18 9,12 15,6"/></svg>
+    Back
+  </button>
+  <div class="detail-hero">
+    <div class="hero-eyebrow" id="detail-tag">Workout</div>
+    <h1 id="detail-title">Workout</h1>
+    <p id="detail-desc"></p>
+  </div>
+  <div class="section-label">Exercises</div>
+  <div class="exercises" id="exercise-list"></div>
+</div>
+
+<!-- ===== BOTTOM NAV ===== -->
+<nav>
+  <button class="nav-btn active" onclick="showPage('home',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 12L12 3L21 12V21H15V15H9V21H3V12Z"/></svg>
+    Home
+  </button>
+  <button class="nav-btn" onclick="showPage('workouts',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 4v16M18 4v16M2 8h4M18 8h4M2 16h4M18 16h4"/></svg>
+    Train
+  </button>
+  <button class="nav-btn" onclick="showPage('nutrition',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/><path d="M8 12h8M12 8v8"/></svg>
+    Fuel
+  </button>
+  <button class="nav-btn" onclick="showPage('tips',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+    Mindset
+  </button>
+  <button class="nav-btn" onclick="showPage('about',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+    About
+  </button>
+</nav>
+
+<!-- ===== INSTALL BANNER ===== -->
+<div id="install-banner" class="hidden">
+  <div class="install-text">Add to your home screen for the full app experience</div>
+  <button class="install-btn" id="install-btn">Install</button>
+  <button class="install-close" onclick="document.getElementById('install-banner').classList.add('hidden')">✕</button>
+</div>
+
+<script>
+// ---- WORKOUT DATA ----
+const workouts = {
+  hiit: {
+    tag: 'HIIT · 30 min',
+    title: 'Full Body Blast',
+    desc: 'High intensity intervals targeting every muscle group. Rest 20 seconds between exercises, 90 seconds between rounds. Complete 3 rounds.',
+    exercises: [
+      { name: 'Jump Squats', sets: '4 × 12 reps' },
+      { name: 'Push-Up Burpees', sets: '4 × 10 reps' },
+      { name: 'Mountain Climbers', sets: '4 × 30 sec' },
+      { name: 'Speed Skaters', sets: '3 × 15 each' },
+      { name: 'Plank to Downdog', sets: '3 × 10 reps' },
+      { name: 'High Knees', sets: '4 × 30 sec' },
+    ]
+  },
+  mobility: {
+    tag: 'Mobility · 15 min',
+    title: 'Morning Flow',
+    desc: 'Wake up your body with this gentle but effective mobility sequence. Move slowly, breathe deeply.',
+    exercises: [
+      { name: 'Cat-Cow', sets: '2 × 10 reps' },
+      { name: 'World's Greatest Stretch', sets: '3 × 5 each side' },
+      { name: 'Hip 90-90 Stretch', sets: '2 × 60 sec each' },
+      { name: 'Thoracic Rotations', sets: '2 × 8 each side' },
+      { name: 'Neck Rolls', sets: '2 × 30 sec' },
+      { name: 'Standing Hip Circles', sets: '2 × 10 each side' },
+    ]
+  },
+  strength: {
+    tag: 'Strength · 25 min',
+    title: 'Core Power',
+    desc: 'Build a bulletproof core with progressive bodyweight movements. Focus on form and control over speed.',
+    exercises: [
+      { name: 'Dead Bug', sets: '3 × 10 each' },
+      { name: 'Hollow Body Hold', sets: '3 × 30 sec' },
+      { name: 'Side Plank', sets: '3 × 30 sec each' },
+      { name: 'V-Ups', sets: '3 × 12 reps' },
+      { name: 'Ab Wheel Rollout', sets: '3 × 8 reps' },
+      { name: 'Plank Shoulder Taps', sets: '3 × 20 reps' },
+    ]
+  },
+  yoga: {
+    tag: 'Mind + Body · 40 min',
+    title: 'Power Yoga',
+    desc: 'Dynamic yoga flow combining strength, balance and breath. Move with intention, link each movement to your breath.',
+    exercises: [
+      { name: 'Sun Salutation A', sets: '5 rounds' },
+      { name: 'Warrior I → II → III', sets: '3 × each side' },
+      { name: 'Chair Pose Hold', sets: '3 × 45 sec' },
+      { name: 'Crow Pose Practice', sets: '5 min' },
+      { name: 'Pigeon Pose', sets: '2 × 90 sec each' },
+      { name: 'Savasana', sets: '5 min' },
+    ]
+  },
+  stretch: {
+    tag: 'Recovery · 20 min',
+    title: 'Deep Stretch',
+    desc: 'Full body stretch and recovery session. Breathe into each stretch, hold positions without bouncing.',
+    exercises: [
+      { name: 'Hamstring Stretch', sets: '2 × 60 sec each' },
+      { name: 'Quad Stretch', sets: '2 × 45 sec each' },
+      { name: 'Chest Opener', sets: '2 × 60 sec' },
+      { name: 'Seated Spinal Twist', sets: '2 × 45 sec each' },
+      { name: 'Child\'s Pose', sets: '2 × 60 sec' },
+      { name: 'Figure-4 Hip Stretch', sets: '2 × 60 sec each' },
+    ]
+  }
+};
+
+// ---- NAVIGATION ----
+function showPage(name, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  if (btn) btn.classList.add('active');
+  window.scrollTo(0, 0);
+}
+
+// ---- WORKOUT DETAIL ----
+function openWorkout(key) {
+  const w = workouts[key];
+  document.getElementById('detail-tag').textContent = w.tag;
+  document.getElementById('detail-title').textContent = w.title;
+  document.getElementById('detail-desc').textContent = w.desc;
+  const list = document.getElementById('exercise-list');
+  list.innerHTML = w.exercises.map(e => `
+    <div class="exercise">
+      <span class="exercise-name">${e.name}</span>
+      <span class="exercise-sets">${e.sets}</span>
+    </div>
+  `).join('');
+  document.getElementById('detail-panel').classList.add('open');
+  window.scrollTo(0, 0);
+}
+
+function closeWorkout() {
+  document.getElementById('detail-panel').classList.remove('open');
+}
+
+// ---- QUOTES ROTATION ----
+const quotes = [
+  { text: "The body achieves what the mind believes.", author: "— Mind Body Coach" },
+  { text: "Discipline is just choosing between what you want now and what you want most.", author: "— Abraham Lincoln" },
+  { text: "Take care of your body. It's the only place you have to live.", author: "— Jim Rohn" },
+  { text: "You don't have to be extreme — just consistent.", author: "— Mind Body Coach" },
+  { text: "The pain you feel today will be the strength you feel tomorrow.", author: "— Unknown" },
+];
+const q = quotes[Math.floor(Math.random() * quotes.length)];
+document.getElementById('quote-text').textContent = q.text;
+document.getElementById('quote-author').textContent = q.author;
+
+// ---- PWA INSTALL ----
+let deferredPrompt;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredPrompt = e;
+  const banner = document.getElementById('install-banner');
+  banner.classList.remove('hidden');
+  document.getElementById('install-btn').addEventListener('click', async () => {
+    banner.classList.add('hidden');
+    deferredPrompt.prompt();
+    await deferredPrompt.userChoice;
+    deferredPrompt = null;
+  });
+});
+</script>
+
+<!-- ===== PWA MANIFEST (inline) ===== -->
+<script>
+const manifestData = {
+  name: "MindBody Coach",
+  short_name: "MindBody",
+  description: "Your personal mind-body coaching hub",
+  start_url: "./",
+  display: "standalone",
+  background_color: "#0a0a0a",
+  theme_color: "#0a0a0a",
+  icons: [
+    { src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' fill='%230a0a0a'/%3E%3Ctext x='50%25' y='58%25' dominant-baseline='middle' text-anchor='middle' font-size='110' font-family='Arial Black' fill='%23e8ff47'%3EMB%3C/text%3E%3C/svg%3E", sizes: "192x192", type: "image/svg+xml" },
+    { src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' fill='%230a0a0a'/%3E%3Ctext x='50%25' y='58%25' dominant-baseline='middle' text-anchor='middle' font-size='280' font-family='Arial Black' fill='%23e8ff47'%3EMB%3C/text%3E%3C/svg%3E", sizes: "512x512", type: "image/svg+xml" }
+  ]
+};
+const blob = new Blob([JSON.stringify(manifestData)], {type:'application/json'});
+const manifestURL = URL.createObjectURL(blob);
+const link = document.createElement('link');
+link.rel = 'manifest'; link.href = manifestURL;
+document.head.appendChild(link);
+</script>
+
+<!-- SERVICE WORKER -->
+<script>
+if ('serviceWorker' in navigator) {
+  const swCode = `
+    const CACHE = 'mindbody-v1';
+    self.addEventListener('install', e => {
+      e.waitUntil(caches.open(CACHE).then(c => c.addAll(['./', './index.html'])));
+    });
+    self.addEventListener('fetch', e => {
+      e.respondWith(caches.match(e.request).then(r => r || fetch(e.request)));
+    });
+  `;
+  const swBlob = new Blob([swCode], {type:'application/javascript'});
+  const swURL = URL.createObjectURL(swBlob);
+  navigator.serviceWorker.register(swURL).catch(()=>{});
+}
+</script>
+</body>
+</html>
